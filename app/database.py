@@ -3,7 +3,7 @@ from decimal import Decimal
 from sqlalchemy.orm import DeclarativeBase,  mapped_column
 from sqlalchemy import select
 from app.models import Wallet
-from exceptions import InsufficientFundsError, UserNotFoundError
+from app.exceptions import InsufficientFundsError, UserNotFoundError
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 
@@ -19,11 +19,11 @@ class PostgreSQL():
             try:
                 async with session.begin():
 
-                    wallet = await session.scalars(select(Wallet).where(Wallet.uuid == UUID)).first()
-
+                    wallet = (await session.scalars(select(Wallet).where(Wallet.uuid == UUID))).first()
+                    print(1)
                     if wallet is None:
                         raise UserNotFoundError(f"Пользователь {UUID} не найден")
-
+                    print(2)
                     if operation_type == "DEPOSIT":
                         wallet.balance += amount
 
@@ -40,7 +40,8 @@ class PostgreSQL():
     async def get_wallet_balance(self,UUID:str):
 
         async with self.SessionLocal() as session:
-            user = await session.scalars(select(Wallet).where(Wallet.uuid ==UUID)).first()
+            result = await session.scalars(select(Wallet).where(Wallet.id ==UUID))
+            user = result.first()
             if user is None:
                 raise UserNotFoundError(f"Пользователь {UUID} не найден")
             return user.balance

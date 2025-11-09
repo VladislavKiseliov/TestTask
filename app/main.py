@@ -4,8 +4,8 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import os
 from uuid import UUID as UUID_Type
-from exceptions import InsufficientFundsError,UserNotFoundError
-from database import PostgreSQL
+from app.exceptions import InsufficientFundsError,UserNotFoundError
+from app.database import PostgreSQL
 from app.shemas import WalletOperation, WalletResponse
 
 app = FastAPI()
@@ -31,7 +31,7 @@ async def operate_wallet(WALLET_UUID: str, operation: WalletOperation):
         raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера")
 
 
-@app.post("/api/v1/wallets/{WALLET_UUID}",responce_model = WalletResponse)
+@app.get("/api/v1/wallets/{WALLET_UUID}",response_model = WalletResponse)
 async def get_wallet(WALLET_UUID: str):
     try:
         uuid = UUID_Type(WALLET_UUID)
