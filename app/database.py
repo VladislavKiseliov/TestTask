@@ -1,7 +1,7 @@
 from decimal import Decimal
 
-from sqlalchemy.orm import DeclarativeBase, Mapped,  mapped_column,Session, sessionmaker
-from sqlalchemy import String, Integer, ForeignKey ,  DateTime , create_engine,select
+from sqlalchemy.orm import DeclarativeBase,  mapped_column
+from sqlalchemy import select
 from app.models import Wallet
 from exceptions import InsufficientFundsError, UserNotFoundError
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
@@ -19,7 +19,7 @@ class PostgreSQL():
             try:
                 async with session.begin():
 
-                    wallet = await session.scalars(select(Wallet).where(Wallet.uuid == UUID).with_for_update()).first()
+                    wallet = await session.scalars(select(Wallet).where(Wallet.uuid == UUID)).first()
 
                     if wallet is None:
                         raise UserNotFoundError(f"Пользователь {UUID} не найден")
