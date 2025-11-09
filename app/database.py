@@ -4,21 +4,22 @@ from sqlalchemy.orm import DeclarativeBase, Mapped,  mapped_column,Session, sess
 from sqlalchemy import String, Integer, ForeignKey ,  DateTime , create_engine,select
 from app.models import Wallet
 from exceptions import InsufficientFundsError, UserNotFoundError
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 
 class PostgreSQL():
 
     def __init__(self,DATABASE_URL):
-        self.engine = create_engine(DATABASE_URL)
-        self.SessionLocal = sessionmaker(bind=self.engine)
+        self.engine = create_async_engine(DATABASE_URL)
+        self.SessionLocal = async_sessionmaker(self.engine,class_=AsyncSession,expire_on_commit=False)
 
-    def operation(self,UUID:str,operation_type:str,amount:Decimal):
+    async def operation(self,UUID:str,operation_type:str,amount:Decimal):
 
-        with self.SessionLocal() as session:
+        async  with self.SessionLocal() as session:
             try:
-                with session.begin():
+                async with session.begin():
 
-                    wallet = session.scalars(select(Wallet).where(Wallet.uuid == UUID).with_for_update()).first()
+                    wallet = await session.scalars(select(Wallet).where(Wallet.uuid == UUID).with_for_update()).first()
 
                     if wallet is None:
                         raise UserNotFoundError(f"Пользователь {UUID} не найден")
@@ -36,10 +37,10 @@ class PostgreSQL():
                 # session.rollback()
                 raise
 
-    def get_wallet_balance(self,UUID:str):
+    async def get_wallet_balance(self,UUID:str):
 
-        with self.SessionLocal() as session:
-            user = session.scalars(select(Wallet).where(Wallet.uuid ==UUID)).first()
+        async with self.SessionLocal() as session:
+            user = await session.scalars(select(Wallet).where(Wallet.uuid ==UUID)).first()
             if user is None:
                 raise UserNotFoundError(f"Пользователь {UUID} не найден")
             return user.balance

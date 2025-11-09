@@ -14,14 +14,14 @@ database = PostgreSQL(DATABASE_URL)
 
 
 @app.post("/api/v1/wallets/{WALLET_UUID}/operation",response_model=WalletOperation)
-def operate_wallet(WALLET_UUID: str, operation: WalletOperation):
+async def operate_wallet(WALLET_UUID: str, operation: WalletOperation):
     try:
         uuid = UUID_Type(WALLET_UUID)
     except ValueError:
         raise HTTPException(status_code=400, detail="Неверный UUID")
 
     try:
-        database.operation(UUID=uuid, operation_type=operation.operation_type, amount=operation.amount)
+       await database.operation(UUID=uuid, operation_type=operation.operation_type, amount=operation.amount)
 
     except UserNotFoundError:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
@@ -32,13 +32,13 @@ def operate_wallet(WALLET_UUID: str, operation: WalletOperation):
 
 
 @app.post("/api/v1/wallets/{WALLET_UUID}",responce_model = WalletResponse)
-def get_wallet(WALLET_UUID: str):
+async def get_wallet(WALLET_UUID: str):
     try:
         uuid = UUID_Type(WALLET_UUID)
     except ValueError:
         raise HTTPException(status_code=400, detail="Неверный UUID")
     try:
-        balance = database.get_wallet_balance(UUID=uuid)
+        balance = await database.get_wallet_balance(UUID=uuid)
     except UserNotFoundError:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
 
