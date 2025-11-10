@@ -6,6 +6,8 @@ from app.models import Wallet
 from app.exceptions import InsufficientFundsError, UserNotFoundError
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
+from app.shemas import WalletResponse
+
 
 class PostgreSQL():
 
@@ -19,13 +21,20 @@ class PostgreSQL():
             try:
                 async with session.begin():
 
-                    wallet = (await session.scalars(select(Wallet).where(Wallet.uuid == UUID))).first()
-                    print(1)
+                    wallet = (await session.scalars(select(Wallet).where(Wallet.id == UUID).with_for_update())).first()
+
                     if wallet is None:
                         raise UserNotFoundError(f"Пользователь {UUID} не найден")
-                    print(2)
+                    # ОБНОВЛЯЕМ ДАННЫЕ ИЗ БД
+                    await session.refresh(wallet)
+
+                    print(f"Wallet: {wallet}")
+                    print(f"Wallet ID: {wallet.id}")
+                    print(f"Wallet balance: {wallet.balance}")  # Теперь покажет 1000
+
                     if operation_type == "DEPOSIT":
                         wallet.balance += amount
+                        print(f"{wallet.balance=}")
 
                     elif operation_type == "WITHDRAW":
                         if wallet.balance < amount:
@@ -33,9 +42,12 @@ class PostgreSQL():
                         wallet.balance -= amount
                     else:
                         raise ValueError(f"Неизвестный тип операции: {operation_type}")
+                return (operation_type, amount)
             except Exception:
                 # session.rollback()
                 raise
+
+
 
     async def get_wallet_balance(self,UUID:str):
 

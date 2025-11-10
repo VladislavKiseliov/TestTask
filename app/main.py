@@ -21,7 +21,7 @@ async def operate_wallet(WALLET_UUID: str, operation: WalletOperation):
         raise HTTPException(status_code=400, detail="Неверный UUID")
 
     try:
-       await database.operation(UUID=uuid, operation_type=operation.operation_type, amount=operation.amount)
+       result = await database.operation(UUID=uuid, operation_type=operation.operation_type, amount=operation.amount)
 
     except UserNotFoundError:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
@@ -29,6 +29,7 @@ async def operate_wallet(WALLET_UUID: str, operation: WalletOperation):
         raise HTTPException(status_code=400, detail="Недостаточно средств")
     except Exception:
         raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера")
+    return WalletOperation(operation_type=result[0], amount=result[1])
 
 
 @app.get("/api/v1/wallets/{WALLET_UUID}",response_model = WalletResponse)
