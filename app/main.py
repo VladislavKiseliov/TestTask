@@ -19,7 +19,6 @@ async def operate_wallet(WALLET_UUID: str, operation: WalletOperation):
         uuid = UUID_Type(WALLET_UUID)
     except ValueError:
         raise HTTPException(status_code=400, detail="Неверный UUID")
-
     try:
        result = await database.operation(UUID=uuid, operation_type=operation.operation_type, amount=operation.amount)
 
